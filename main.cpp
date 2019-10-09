@@ -2,7 +2,6 @@
 #include <vector>
 
 uint32_t getIndex(char ch) {
-	//std::cout << "getIndex " << ch << " " << (uint32_t)(ch-'a') << std::endl;
 	return (uint32_t)(ch - 'a');
 }
 
@@ -11,9 +10,7 @@ char getLetter(uint32_t index) {
 }
 
 void removeBit(uint32_t& alphabet, uint32_t index) {
-	//std::cout << "removeBit BFR " << alphabet << " " << index << std::endl;
 	alphabet &= (~((uint32_t)(1) << index));
-	//std::cout << "removeBIt AFT " << alphabet << std::endl;
 }
 
 char getAvailableLetter(uint32_t word) {
