@@ -33,10 +33,15 @@ Node::Node() {
 	leaf_pattern_number.clear();
 }
 
-struct Bohr {
-	Node* root;
+class Bohr {
+public:
 	Bohr();
 	~Bohr();
+	void init(std::string pattern);
+	void process_text(std::string text);
+	
+private:
+	Node* root;
 	int text_size = 0;
 	int subpatterns_amount = 0;
 	int pattern_size = 0;
@@ -46,9 +51,7 @@ struct Bohr {
 	Node* get_suff_link(Node* cur_node);
 	Node* get_link(Node* cur_node, char char_to_parent);
 	Node* get_up(Node* cur_node);
-	void add_string(std::string pattern, int pattern_number, int string_id);
-	void process_text(std::string text);
-	void init(std::string pattern);
+	void add_string(std::string pattern, int pattern_number, int string_id);	
 };
 
 Bohr::Bohr() {
@@ -183,9 +186,9 @@ int main() {
 	bohr.init(pattern);
 	bohr.process_text(text);
 
-	auto ivec = bohr.restore_answer();
-	for (int i = 0; i < ivec.size(); i++) {
-		std::cout << ivec[i] << " ";
+	auto answer_vec = bohr.restore_answer();
+	for (int i = 0; i < answer_vec.size(); i++) {
+		std::cout << answer_vec[i] << " ";
 	}
 	std::cout << std::endl;
 }
