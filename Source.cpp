@@ -8,9 +8,10 @@ class point {
 public:
 	point(double x, double y, double z) : _x(x), _y(y), _z(z) {};
 	point() = default;
-	double get_x() { return _x; }
-	double get_y() { return _y; }
-	double get_z() { return _z; }
+	double get_x() const { return _x; }
+	double get_y() const { return _y; }
+	double get_z() const { return _z; }
+	double get_distance(const point &point2) const;
 private:
 	double _x;
 	double _y;
@@ -19,10 +20,12 @@ private:
 
 class segment {
 public:
-	double size() { return _sz; }
-	segment(point point1, point point2) : _p1(point1), _p2(point2) { _calculate_size(); };
-	point get_first_point() { return _p1; }
-	point get_second_point() { return _p2; }
+	double size() const { return _sz; }
+	segment(const point &point1, const point &point2) : _p1(point1), _p2(point2) { _calculate_size(); };
+	segment() = default;
+	point get_first_point() const { return _p1; }
+	point get_second_point() const { return _p2; }
+	point get_parameterized_point (double param) const;
 private:
 	void _calculate_size();
 	double _sz;
@@ -37,13 +40,13 @@ void segment::_calculate_size() {
 	_sz = sqrt(dx * dx + dy * dy + dz * dz);
 }
 
-point get_parameterized_point(segment seg, double param) {
-	double x1 = seg.get_first_point().get_x();
-	double x2 = seg.get_second_point().get_x();
-	double y1 = seg.get_first_point().get_y();
-	double y2 = seg.get_second_point().get_y();
-	double z1 = seg.get_first_point().get_z();
-	double z2 = seg.get_second_point().get_z();
+point segment::get_parameterized_point(double param) const {
+	double x1 = get_first_point().get_x();
+	double x2 = get_second_point().get_x();
+	double y1 = get_first_point().get_y();
+	double y2 = get_second_point().get_y();
+	double z1 = get_first_point().get_z();
+	double z2 = get_second_point().get_z();
 
 	double diff_x = x2 - x1;
 	double diff_y = y2 - y1;
@@ -54,16 +57,15 @@ point get_parameterized_point(segment seg, double param) {
 	return point(new_x, new_y, new_z);
 }
 
-double get_distance(point point1, point point2) {
-	double dx = point2.get_x() - point1.get_x();
-	double dy = point2.get_y() - point1.get_y();
-	double dz = point2.get_z() - point1.get_z();
+double point::get_distance(const point &point2) const {
+	double dx = point2.get_x() - get_x();
+	double dy = point2.get_y() - get_y();
+	double dz = point2.get_z() - get_z();
 	return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 template <typename T, typename U, typename FUNC>
-double ternar_search(T left, U right, bool min_search, FUNC function) {
-	double sigma = 0.00000001;
+double ternar_search(T left, U right, bool min_search, FUNC function, double sigma = 1e-7) {
 	double left_param = 0;
 	double right_param = 1;
 	while (right_param - left_param > sigma) {
@@ -81,14 +83,14 @@ double ternar_search(T left, U right, bool min_search, FUNC function) {
 	return left_param;
 }
 
-double get_minimum_distance(segment seg1, segment seg2) {
+double get_minimum_distance(const segment &seg1, const segment &seg2) {
 	double min_val = DBL_MAX;
 	auto calculate_distance_segments = [&seg1, &seg2, &min_val](double param) -> double {
-		point pnt = get_parameterized_point(seg1, param);
+		point pnt = seg1.get_parameterized_point(param);
 		double distance;
 		auto calculate_distance_segment_point = [&pnt, &seg2, &min_val, &distance](double inner_param) -> double {
-			point inner_pnt = get_parameterized_point(seg2, inner_param);
-			distance = get_distance(pnt, inner_pnt);
+			point inner_pnt = seg2.get_parameterized_point(inner_param);
+			distance = pnt.get_distance(inner_pnt);
 			if (distance < min_val)
 				min_val = distance;
 			return distance;
