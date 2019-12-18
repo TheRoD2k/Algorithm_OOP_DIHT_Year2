@@ -15,11 +15,6 @@ std::vector<int> ClassicalPrefixFunction(std::string &str) {
 	return prefix_vector;
 }
 
-struct PrimitivePair {
-	char letter;
-	int prefix = 0;
-};
-
 bool CheckIfSubstringPrefixFunction(std::string& pattern, std::vector<int>& prefix_vector, char input) {
 	static int last_prefix = 0, current_prefix = 0;
 	current_prefix = last_prefix;
