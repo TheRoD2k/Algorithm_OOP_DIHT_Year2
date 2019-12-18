@@ -4,31 +4,24 @@
 #include <algorithm>
 #include <utility>
 #include <iomanip>
+unsigned gk_alphabet_size = 256u;
 
-std::vector<int64_t> calc_positions(std::vector<int64_t> count) {
+void calc_positions(std::vector<long long>& count) {
 	count[0] = 1;
 	for (int i = 1; i < count.size(); i++)
 		count[i] += count[i - 1];
-	return count;
 }
 
-std::vector<int64_t> get_suff_array(std::string str) {
-
-	std::vector<int64_t> count(std::max(256u, unsigned(str.size())), 0);
-	for (auto ch : str)
-		count[ch]++;
-
-	count = calc_positions(count);
-	std::vector<int64_t> prev_count(count.size());
+void zero_iteration_suff_array(const std::string& str, std::vector<long long>& count,
+	std::vector<long long>& prev_count, std::vector<long long>& classes, std::vector<long long>& suffs, int& classesN) {
 	prev_count[0] = 0;
 	for (int i = 1; i < prev_count.size(); i++)
 		prev_count[i] = count[i - 1];
-	std::vector<int64_t> suffs(str.size());
+
 	for (int i = 0; i < str.size(); i++) {
 		suffs[prev_count[str[i]]++] = i;
 	}
-	std::vector<int64_t> classes(str.size());
-	int classesN = 0;
+
 	char last_char = str[str.size() - 1];
 
 	for (int i = 0; i < suffs.size(); i++) {
@@ -38,29 +31,47 @@ std::vector<int64_t> get_suff_array(std::string str) {
 		}
 		classes[suffs[i]] = classesN;
 	}
+}
 
+void sort_intervals(const std::string& str, std::vector<long long>& count,
+	std::vector<long long>& prev_count, const std::vector<long long>& classes, std::vector<long long>& suffs, int& cur_len) {
+	std::vector<long long> sorted_by2(str.size());
+	for (int i = 0; i < str.size(); i++)
+		sorted_by2[i] = (suffs[i] + str.size() - cur_len) % str.size();
+
+	std::fill(count.begin(), count.end(), 0);
+
+	for (int i = 0; i < sorted_by2.size(); i++) {
+		count[classes[sorted_by2[i]]]++;
+	}
+
+	calc_positions(count);
+	prev_count[0] = 0;
+	for (int i = 1; i < prev_count.size(); i++)
+		prev_count[i] = count[i - 1];
+
+	for (int i = 0; i < str.size(); i++)
+		suffs[prev_count[classes[sorted_by2[i]]]++] = sorted_by2[i];
+
+}
+
+std::vector<long long> get_suff_array(const std::string& str) {
+
+	std::vector<long long> count(std::max(gk_alphabet_size, unsigned(str.size())), 0);
+	for (auto ch : str)
+		count[ch]++;
+
+	calc_positions(count);
+	std::vector<long long> prev_count(count.size());
+	std::vector<long long> classes(str.size());
+	std::vector<long long> suffs(str.size());
+	int classesN = 0;
+	zero_iteration_suff_array(str, count, prev_count, classes, suffs, classesN);
 
 	int cur_len = 1;
 	while (cur_len <= str.size()) {
-		std::vector<int64_t> sorted_by2(str.size());
-		for (int i = 0; i < str.size(); i++)
-			sorted_by2[i] = (suffs[i] + str.size() - cur_len) % str.size();
-
-		std::fill(count.begin(), count.end(), 0);
-
-		for (int i = 0; i < sorted_by2.size(); i++) {
-			count[classes[sorted_by2[i]]]++;
-		}
-
-		count = calc_positions(count);
-		prev_count[0] = 0;
-		for (int i = 1; i < prev_count.size(); i++)
-			prev_count[i] = count[i - 1];
-
-		for (int i = 0; i < str.size(); i++)
-			suffs[prev_count[classes[sorted_by2[i]]]++] = sorted_by2[i];
-
-		std::vector<int64_t> new_classes(str.size());
+		sort_intervals(str, count, prev_count, classes, suffs, cur_len);
+		std::vector<long long> new_classes(str.size());
 		int classesN = 0;
 
 		for (int i = 1; i < str.size(); i++) {
@@ -77,7 +88,7 @@ std::vector<int64_t> get_suff_array(std::string str) {
 	return suffs;
 }
 
-std::vector<int64_t> build_lcp_array(std::string str, std::vector<int64_t>  suffs) {
+std::vector<int64_t> build_lcp_array(const std::string& str, std::vector<int64_t>  suffs) {
 	std::vector<int64_t> lcp(str.size());
 	std::vector<int64_t> pos(str.size());
 	for (int i = 0; i < str.size(); i++)
@@ -107,14 +118,14 @@ void print_array(std::vector<int64_t> arr) {
 	std::cout << std::endl;
 }
 
-std::string get_common_substring_by_order(std::string s_string, std::string t_string, int64_t k) {
+std::string get_common_substring_by_order(const std::string& s_string, const std::string& t_string, int64_t k) {
 	std::string str = s_string + '\1' + t_string + '\0';
 	auto suff_array = get_suff_array(str);
 	auto lcp_array = build_lcp_array(str, suff_array);
 	int prev_index = -1;
 	int64_t count = 0, prev_count = 0;
 	std::string answer = "";
-	
+
 	for (int i = 2; i < str.size() - 1 && count < k; i++) {
 		if ((suff_array[i] <= s_string.size() && suff_array[i + 1] >= s_string.size())
 			|| (suff_array[i] >= s_string.size() && suff_array[i + 1] <= s_string.size())) {
@@ -130,8 +141,7 @@ std::string get_common_substring_by_order(std::string s_string, std::string t_st
 					answer += str[j];
 			}
 		}
-		else {
-		}
+		else { continue; }
 	}
 	return (answer == "") ? "-1" : answer;
 }
