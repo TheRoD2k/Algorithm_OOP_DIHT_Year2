@@ -1,32 +1,27 @@
-#include <string>
 #include <iostream>
+#include <string>
 #include <vector>
 #include <algorithm>
+#include <utility>
+#include <iomanip>
+unsigned gk_alphabet_size = 256u;
 
-std::vector<int> calc_positions(std::vector<int> count) {
+void calc_positions(std::vector<long long>& count) {
 	count[0] = 1;
 	for (int i = 1; i < count.size(); i++)
 		count[i] += count[i - 1];
-	return count;
 }
 
-std::vector<int> get_suff_array(std::string str) {
-
-	std::vector<int> count(std::max(256u, unsigned(str.size())), 0);
-	for (auto ch : str)
-		count[ch]++;
-
-	count = calc_positions(count);
-	std::vector<int> prev_count(count.size());
+void zero_iteration_suff_array(const std::string& str, std::vector<long long>& count,
+	std::vector<long long>& prev_count, std::vector<long long>& classes, std::vector<long long>& suffs, int& classesN) {
 	prev_count[0] = 0;
 	for (int i = 1; i < prev_count.size(); i++)
 		prev_count[i] = count[i - 1];
-	std::vector<int> suffs(str.size());
+
 	for (int i = 0; i < str.size(); i++) {
 		suffs[prev_count[str[i]]++] = i;
 	}
-	std::vector<int> classes(str.size());
-	int classesN = 0;
+
 	char last_char = str[str.size() - 1];
 
 	for (int i = 0; i < suffs.size(); i++) {
@@ -36,29 +31,47 @@ std::vector<int> get_suff_array(std::string str) {
 		}
 		classes[suffs[i]] = classesN;
 	}
+}
 
+void sort_intervals(const std::string& str, std::vector<long long>& count,
+	std::vector<long long>& prev_count, const std::vector<long long>& classes, std::vector<long long>& suffs, int& cur_len) {
+	std::vector<long long> sorted_by2(str.size());
+	for (int i = 0; i < str.size(); i++)
+		sorted_by2[i] = (suffs[i] + str.size() - cur_len) % str.size();
+
+	std::fill(count.begin(), count.end(), 0);
+
+	for (int i = 0; i < sorted_by2.size(); i++) {
+		count[classes[sorted_by2[i]]]++;
+	}
+
+	calc_positions(count);
+	prev_count[0] = 0;
+	for (int i = 1; i < prev_count.size(); i++)
+		prev_count[i] = count[i - 1];
+
+	for (int i = 0; i < str.size(); i++)
+		suffs[prev_count[classes[sorted_by2[i]]]++] = sorted_by2[i];
+
+}
+
+std::vector<long long> get_suff_array(const std::string& str) {
+
+	std::vector<long long> count(std::max(gk_alphabet_size, unsigned(str.size())), 0);
+	for (auto ch : str)
+		count[ch]++;
+
+	calc_positions(count);
+	std::vector<long long> prev_count(count.size());
+	std::vector<long long> classes(str.size());
+	std::vector<long long> suffs(str.size());
+	int classesN = 0;
+	zero_iteration_suff_array(str, count, prev_count, classes, suffs, classesN);
 
 	int cur_len = 1;
 	while (cur_len <= str.size()) {
-		std::vector<int> sorted_by2(str.size());
-		for (int i = 0; i < str.size(); i++)
-			sorted_by2[i] = (suffs[i] + str.size() - cur_len) % str.size();
-
-		std::fill(count.begin(), count.end(), 0);
-
-		for (int i = 0; i < sorted_by2.size(); i++) {
-			count[classes[sorted_by2[i]]]++;
-		}
-
-		count = calc_positions(count);
-		prev_count[0] = 0;
-		for (int i = 1; i < prev_count.size(); i++)
-			prev_count[i] = count[i - 1];
-
-		for (int i = 0; i < str.size(); i++)
-			suffs[prev_count[classes[sorted_by2[i]]]++] = sorted_by2[i];
-
-		std::vector<int> new_classes(str.size());
+		sort_intervals(str, count, prev_count, classes, suffs, cur_len);
+		std::vector<long long> new_classes(str.size());
 		int classesN = 0;
 
 		for (int i = 1; i < str.size(); i++) {
@@ -72,14 +85,13 @@ std::vector<int> get_suff_array(std::string str) {
 		classes = new_classes;
 		cur_len *= 2;
 	}
-	
-
 	return suffs;
 }
 
-std::vector<int> build_lcp_array(std::string str, std::vector<int>  suffs) {
-	std::vector<int> lcp(str.size());
-	std::vector<int> pos(str.size()); 
+
+std::vector<long long> build_lcp_array(const std::string& str, const std::vector<long long>& suffs) {
+	std::vector<long long> lcp(str.size());
+	std::vector<long long> pos(str.size());
 	for (int i = 0; i < str.size(); i++)
 		pos[suffs[i]] = i;
 	int k = 0;
@@ -101,13 +113,13 @@ std::vector<int> build_lcp_array(std::string str, std::vector<int>  suffs) {
 	return lcp;
 }
 
-int get_amount_of_unique_substrings(std::string input) {
+long long get_amount_of_unique_substrings(std::string input) {
 	input += '\0';
 	auto suff_arr = get_suff_array(input);
 	auto lcp_array = build_lcp_array(input, suff_arr);
-	int sum = 0;
+	long long sum = 0;
 	for (int i = 0; i < input.size(); i++)
-		sum += (input.size()-1) - suff_arr[i];
+		sum += (input.size() - 1) - suff_arr[i];
 	for (int i = 0; i < input.size() - 1; i++)
 		sum -= lcp_array[i];
 	return sum;
@@ -116,7 +128,7 @@ int get_amount_of_unique_substrings(std::string input) {
 int main() {
 	std::string input;
 	std::cin >> input;
-	int amount_of_unique_substrings = get_amount_of_unique_substrings(input);	
+	long long amount_of_unique_substrings = get_amount_of_unique_substrings(input);
 	std::cout << amount_of_unique_substrings << std::endl;
 	return 0;
 }
