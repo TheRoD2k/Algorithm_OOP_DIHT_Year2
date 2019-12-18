@@ -14,7 +14,7 @@ struct Node {
 	std::unordered_map<char, std::shared_ptr<Node>> son;
 	std::unordered_map<char, std::shared_ptr<Node>> go;
 	bool is_leaf = false;
-	std::shared_ptr<Node> parent;
+	std::weak_ptr<Node> parent;
 	std::shared_ptr<Node> up;
 	std::shared_ptr<Node> suff_link;
 	char char_to_parent;
@@ -25,7 +25,7 @@ struct Node {
 
 Node::Node() {
 	is_leaf = false;
-	parent = nullptr;
+	//parent = nullptr;
 	up = nullptr;
 	suff_link = nullptr;
 	char_to_parent = gk_english_alphabet_size + 1;
@@ -61,11 +61,12 @@ Bohr::Bohr() {
 
 
 std::shared_ptr<Node> Bohr::get_suff_link(std::shared_ptr<Node> cur_node) {
+	auto cur_node_parent = cur_node->parent.lock();
 	if (cur_node->suff_link == nullptr) {
-		if (cur_node == root || cur_node->parent == root)
+		if (cur_node == root || cur_node_parent == root)
 			cur_node->suff_link = root;
 		else
-			cur_node->suff_link = get_link(get_suff_link(cur_node->parent), cur_node->char_to_parent);
+			cur_node->suff_link = get_link(get_suff_link(cur_node_parent), cur_node->char_to_parent);
 	}
 	return cur_node->suff_link;
 }
