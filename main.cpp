@@ -22,7 +22,7 @@ char getAvailableLetter(uint32_t word) {
 	return (char)('a' + index);
 }
 
-std::string getMinLexString(std::vector<int> prefix_vector) {
+std::string getMinLexString(const std::vector<int> &prefix_vector) {
 	uint32_t c_alphabet_size = 26;
 	uint32_t c_full_alphabet = (~((uint32_t)(0)) << (32 - c_alphabet_size)) >> (32 - c_alphabet_size);
 	std::vector<char> string_vec(prefix_vector.size());
