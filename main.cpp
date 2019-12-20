@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-void SearchSymbol(std::vector<int>& prefix_vector, std::string& pattern, char& input, int& current_prefix, int& last_prefix ) {
+void SearchSymbol(const std::vector<int>& prefix_vector, const std::string& pattern, const char& input, int& current_prefix, int& last_prefix ) {
 	while ((current_prefix > 0) && (pattern[current_prefix] != input)) {
 		current_prefix = prefix_vector[current_prefix - 1];
 	}
@@ -11,7 +11,7 @@ void SearchSymbol(std::vector<int>& prefix_vector, std::string& pattern, char& i
 	last_prefix = current_prefix;
 }
 
-std::vector<int> ClassicalPrefixFunction(std::string& pattern) {
+std::vector<int> ClassicalPrefixFunction(const std::string& pattern) {
 	std::vector<int> prefix_vector(pattern.size(), 0);
 	for (int i = 1; i < pattern.size(); i++) {
 		int current_prefix = prefix_vector[i - 1];
@@ -21,7 +21,7 @@ std::vector<int> ClassicalPrefixFunction(std::string& pattern) {
 }
 
 
-void ReadLineAndPrintSubstringIndexes(std::string& pattern) {
+void ReadLineAndPrintSubstringIndexes(const std::string& pattern) {
 	std::vector<int> prefix_vector = ClassicalPrefixFunction(pattern);
 	char input;
 	int pos = 0;
